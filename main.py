@@ -1,6 +1,22 @@
+# Завдання
+# У цьому домашньому завданні вам треба:
+#
+# Додати функціонал збереження адресної книги на диск та відновлення з диска. Для цього ви можете вибрати будь-який
+# зручний для вас протокол серіалізації/десеріалізації даних та реалізувати методи, які дозволять зберегти всі дані у
+# файл і завантажити їх із файлу.
+#
+# Додати користувачеві можливість пошуку вмісту книги контактів, щоб можна було знайти всю інформацію про одного або
+# кількох користувачів за кількома цифрами номера телефону або літерами імені тощо.
+#
+# Критерії прийому:
+# Програма не втрачає дані після виходу з програми та відновлює їх з файлу.
+# Програма виводить список користувачів, які мають в імені або номері телефону є збіги із введеним рядком.
+
 from collections import UserDict
 import datetime
 import re
+import pickle
+import os
 
 
 class AddressBook(UserDict):
@@ -112,7 +128,11 @@ class Record:
                 elem.value = new_phone
 
 
-RECORDS = AddressBook()
+if os.path.isfile('dump.pickle'):
+    with open('dump.pickle', 'rb') as file:
+        RECORDS = pickle.load(file)
+else:
+    RECORDS = AddressBook()
 
 
 # Decorators
@@ -191,6 +211,24 @@ def phone(*args):
     contact_name = args[0][0]
     print(RECORDS[contact_name])
 
+@input_error
+def search(*args):
+    command_list = args[0]
+    if len(command_list) == 0:
+        print("Give me text for search")
+        return
+
+    search_text = command_list[0]
+
+    for elem in RECORDS:
+        data = elem[1]
+        show_this_elem = data.name.value.lower().find(search_text) >= 0
+        for phone in data.phones:
+            if ''.join(filter(str.isdigit, phone.value)).find(search_text) >= 0:
+                show_this_elem = True
+
+        if show_this_elem:
+            print(f"""Name: {data.name.value} {f" - Birthday: {data.birthday.value.strftime('%d-%m-%Y')} ({data.birthday.days_to_birthday()})" if data.birthday.value else ''}\nPhone: {', '.join(phone.value for phone in data.phones)}""")
 
 @input_error
 def show():
@@ -200,6 +238,8 @@ def show():
 
 
 def stop():
+    with open('dump.pickle', 'wb') as file:
+        pickle.dump(RECORDS, file)
     print("Good bye!")
     quit()
 
@@ -226,7 +266,8 @@ OPERATIONS = {
     'bye': stop,
     'close': stop,
     'exit': stop,
-    'delete': delete_phone
+    'delete': delete_phone,
+    'search': search
 }
 
 
