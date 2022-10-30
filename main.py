@@ -36,6 +36,10 @@ class AddressBook(UserDict):
         for key, value in self.data.items():
             yield key, value
 
+    def get_key_by_name(self, name):
+        for key, value in self.data.items():
+            if key.value == name:
+                return key
 
 class Field:
     def __init__(self, value=None):
@@ -179,20 +183,18 @@ def add(*args):
 @input_error
 def change_phone(*args):
     command_list = args[0]
-    if not len(command_list) == 3:
+    if len(command_list) != 3:
         print("Give me name, old and new phone please")
         return
 
-    contact_name = command_list[0]
-    contact_old_phone = command_list[1]
-    contact_new_phone = command_list[2]
-    RECORDS[contact_name].edit_phone(contact_old_phone, contact_new_phone)
+    contact_name, contact_old_phone, contact_new_phone, *_ = command_list
+    RECORDS[RECORDS.get_key_by_name(contact_name)].edit_phone(contact_old_phone, contact_new_phone)
 
 
 @input_error
 def delete_phone(*args):
     command_list = args[0]
-    if not len(command_list) == 2:
+    if len(command_list) != 2:
         print("Give me name and phone please")
         return
 
@@ -204,7 +206,7 @@ def delete_phone(*args):
 @input_error
 def phone(*args):
     command_list = args[0]
-    if not len(command_list) == 1:
+    if len(command_list) != 1:
         print("Enter user name")
         return
 
@@ -214,7 +216,7 @@ def phone(*args):
 @input_error
 def search(*args):
     command_list = args[0]
-    if len(command_list) == 0:
+    if not command_list:
         print("Give me text for search")
         return
 
